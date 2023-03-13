@@ -11,11 +11,12 @@ const app = express();
 
 // IMPORTS FROM OTHER FILES
 const authRouter = require("./routes/auth");
-
+const userRouter = require("./routes/user");
 // middleware
 app.use(express.json());
 app.use(authRouter);
 app.use(deliveryRouter);
+app.use(userRouter);
 // Connections
 mongoose
   .set('strictQuery', false)

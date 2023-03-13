@@ -42,7 +42,7 @@ const deliverySchema = mongoose.Schema({
   },
   deliveryinstructions: {
     type: String,
-    required: true,
+    default: "",
   },
   deliveryfee: {
     type: String,
@@ -65,7 +65,23 @@ const deliverySchema = mongoose.Schema({
     type: String,
     default: "",
   },
-
+  state1:{
+    type: String,
+    default: "",
+  },
+  state2:{
+    type: String,
+    default: "",
+  },
+  start:{
+    type: Number,
+    default: 0,
+  },
+  end:{
+    type: Number,
+    default: 0,
+  },
+ 
   
   
 
