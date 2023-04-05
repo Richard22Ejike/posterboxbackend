@@ -17,6 +17,7 @@ app.use(express.json());
 app.use(authRouter);
 app.use(deliveryRouter);
 app.use(userRouter);
+app.use(adminRouter);
 // Connections
 mongoose
   .set('strictQuery', false)

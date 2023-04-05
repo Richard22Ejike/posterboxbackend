@@ -87,39 +87,47 @@ authRouter.post("/otp", async (req, res) => {
   const otpStorage = {};
 authRouter.post('/api/generate-otp', async(req, res) => {
   try {
-    const { phone } = req.body;
+// Check if an OTP has already been generated for the phone number and if it has expired
+const otpInfo = otpStorage[phone];
+if (otpInfo && otpInfo.expiryTime > Date.now()) {
+  // If OTP found not expired, send the existing OTP back in the response
+  res.send({ otp: otpInfo.otp });
+  return;
+}
 
-    // Check if an OTP has already been generated for the phone number and if it has expired
-    const otpInfo = otpStorage[phone];
-    if (otpInfo && otpInfo.expiryTime > Date.now()) {
-      // OTP has not expired, send the existing OTP back in the response
-      res.send({ otp: otpInfo.otp });
-      return;
-    }
+// Generate a new 6-digit OTP
+const otp = otpGenerator.generate(6, {
+  upperCaseAlphabets: false, 
+  lowerCaseAlphabets:false,
+  specialChars: false 
+});
 
-    // Generate a new 6-digit OTP
-    const otp = otpGenerator.generate(6, {
-      upperCaseAlphabets: false, 
-      lowerCaseAlphabets:false,
-      specialChars: false 
-    });
+// Store the new OTP and the expiry time in memory
+const expiryTime = Date.now() + 5 * 60 * 1000; // 5 minutes
+otpStorage[phone] = { otp, expiryTime };
 
-    // Store the new OTP and the expiry time in memory
-    const expiryTime = Date.now() + 5 * 60 * 1000; // 5 minutes
-    otpStorage[phone] = { otp, expiryTime };
-    var otpMessage = `Dear Customer, ${otp} is the One Time Password ( OTP ) for your login.`;
-    client.messages
-      .create({ body: otpMessage, from: "+15104013826", to: `+234${phone}` })
-      .then(message => console.log(message.sid));
+// Create message with One Time Password
+var otpMessage = `Dear Customer, ${otp} is the One Time Password ( OTP ) for your login.`;
 
-    // Send the new OTP back in the response
-    console.log(otp);
-    res.send({ otp });
+// Send SMS message containing OTP to destination number using Twilio
+client.messages
+  .create({ body: otpMessage, from: "+15104013826", to: `+234${phone}` })
+  .then(message => console.log(message.sid));
+
+// Send the new OTP back in the response
+console.log(otp);
+res.send({ otp });
+
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
-  //Endpoint to verify an OTP?
+ 
+
+  
+
+
+
 
 authRouter.post('/api/verify-otp', (req, res) => {
   try {
@@ -169,7 +177,8 @@ authRouter.post("/api/signup", async (req, res) => {
       email,
       password: hashedPassword,
       name,
-      phone
+      phone,
+      orderedAt: new Date().getTime(),
     });
     user = await user.save();
     res.json(user);

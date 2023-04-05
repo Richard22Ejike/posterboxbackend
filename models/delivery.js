@@ -57,6 +57,10 @@ const deliverySchema = mongoose.Schema({
     type: String,
     default: "",
   },
+  userId:{
+    type: String,
+    default: "",
+  },
   progress:{
     type: String,
     default: "",
@@ -81,7 +85,14 @@ const deliverySchema = mongoose.Schema({
     type: Number,
     default: 0,
   },
- 
+  wallet:{
+    type: Boolean,
+    default: false,
+  },
+  orderedAt: {
+    type: Number,
+    required: true,
+  },
   
   
 

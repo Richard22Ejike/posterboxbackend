@@ -72,6 +72,11 @@ const userSchema = mongoose.Schema({
           default: "",
           trim: true,
       },
+      deliveriesDone: {
+        type: Number,
+        default:0,
+        trim:true,
+      }
 
       },
     ],
@@ -149,6 +154,10 @@ const userSchema = mongoose.Schema({
 
         },
       ],
+      orderedAt: {
+        type: Number,
+        required: true,
+      },
       
 
 });

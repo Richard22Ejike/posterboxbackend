@@ -5,52 +5,75 @@ const User = require("../models/user");
 const { Delivery } = require("../models/delivery");
 
 deliveryRouter.post("/api/add-delivery", async (req, res) => {
-    try {
-      const { 
-        username, 
-        deliveryfee, 
-        deliveryinstructions, 
-        deliveryweight, 
-        deliverytimeline, 
-        recevieraddress,
-        receviername,
-        receviernumber,
-        sendername, 
-        sendernumber,
-        deliverydate,
-        senderaddress,
-        progress,
-        usernumber,
+  try {
+    const { 
+      username, 
+      deliveryfee, 
+      deliveryinstructions, 
+      deliveryweight, 
+      deliverytimeline, 
+      recevieraddress,
+      receviername,
+      receviernumber,
+      sendername, 
+      sendernumber,
+      deliverydate,
+      senderaddress,
+      progress,
+      usernumber,
       state1,
-    state2,
-    start,
-  end } = req.body;
-      let delivery = new Delivery({
-        username, 
-        deliveryfee, 
-        deliveryinstructions, 
-        deliveryweight, 
-        deliverytimeline, 
-        recevieraddress,
-        receviername,
-        receviernumber,
-        deliverydate,
-        sendername,  
-        sendernumber,
-        senderaddress,
-        progress,
-        usernumber,
-        state1,
-        state2,
-        start,
-        end
-      });
-      delivery = await delivery.save();
-      res.json(delivery);
-    } catch (e) {
-      res.status(500).json({ error: e.message });
+      state2,
+      start,
+      end,
+      wallet
+    } = req.body;
+
+    // check if wallet is true or false, and adjust the delivery fee accordingly
+    let finalDeliveryFee = deliveryfee;
+    if (wallet) {
+      finalDeliveryFee = parseFloat(deliveryfee);
     }
-  });
+
+    // check if delivery fee is greater than available wallet balance
+    if (wallet && user.wallet < finalDeliveryFee) {
+      return res.status(400).json({ msg: "Insufficient Balance" });
+    }
+
+    let delivery = new Delivery({
+      username, 
+      deliveryfee: finalDeliveryFee, // update with adjusted delivery fee
+      deliveryinstructions, 
+      deliveryweight, 
+      deliverytimeline, 
+      recevieraddress,
+      receviername,
+      receviernumber,
+      deliverydate,
+      sendername,  
+      sendernumber,
+      senderaddress,
+      progress,
+      usernumber,
+      state1,
+      state2,
+      start,
+      end,
+      wallet,
+      orderedAt: new Date().getTime(),
+    });
+
+    if (wallet) {
+      user.wallet -= finalDeliveryFee; // subtract delivery fee from user's wallet balance if wallet is true
+      await user.save();
+    }
+
+    delivery = await delivery.save();
+    res.json(delivery);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
   deliveryRouter.post("/api/track-delivery", async (req, res) => {
     try {
       const { 
@@ -77,11 +100,13 @@ deliveryRouter.post("/api/add-delivery", async (req, res) => {
         userId,
        } = req.body;
       let delivery = await Delivery.findById(_id);
-      let user = await User.findById(userId);
+    
       if(delivery.username == '' && user.ongoing == ''){
         delivery.username = username;
         delivery.progress = progress;
         delivery.usernumber = usernumber;
+        delivery.userId = userId;
+        await user.save();
         delivery = await delivery.save();
         res.json(delivery);
       }
@@ -174,9 +199,13 @@ deliveryRouter.post("/api/add-delivery", async (req, res) => {
 
   deliveryRouter.post("/api/change-order-status",  async (req, res) => {
     try {
-      const { id, progress } = req.body;
+      const { id, progress,userId } = req.body;
       let delivery= await Delivery.findById(id);
+      let user = await User.findById(userId);
       delivery.progress = progress;
+      if (progress === 'DELIVERED') {
+        user.deliveriesDone++;
+      }
       delivery = await delivery.save();
       res.json(delivery);
     } catch (e) {
