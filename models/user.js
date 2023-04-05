@@ -30,6 +30,10 @@ const userSchema = mongoose.Schema({
         type: String,
         default: "",
     },
+    type: {
+      type: String,
+      default: "user",
+    },
     phone: {
         type: String,
         default: "",
@@ -44,7 +48,7 @@ const userSchema = mongoose.Schema({
   },
    verified: {
     type: String,
-    default: "",
+    default: "false",
   },
   ongoing: {
     type: String,

@@ -36,6 +36,7 @@ authRouter.post("/api/signin", async (req, res) => {
     const token = jwt.sign({ id: user._id }, "passwordKey");
     res.json({ token, ...user._doc });
   } catch (e) {
+    console.log(e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -87,6 +88,7 @@ authRouter.post("/otp", async (req, res) => {
   const otpStorage = {};
 authRouter.post('/api/generate-otp', async(req, res) => {
   try {
+    const { phone} = req.body;
 // Check if an OTP has already been generated for the phone number and if it has expired
 const otpInfo = otpStorage[phone];
 if (otpInfo && otpInfo.expiryTime > Date.now()) {
@@ -185,6 +187,31 @@ authRouter.post("/api/signup", async (req, res) => {
    
     }
   
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+authRouter.post("/admin/signup", async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ msg: "User with same email already exists!" });
+    }
+
+    const hashedPassword = await bcryptjs.hash(password, 8);
+
+    let user = new User({
+      email,
+      password: hashedPassword,
+      name,
+      type:'admin',
+    });
+    user = await user.save();
+    res.json(user);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

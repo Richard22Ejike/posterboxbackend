@@ -143,8 +143,10 @@ userRouter.post("/api/editprofile", async (req, res) => {
 
  
   userRouter.post('/api/get-deliver-schedule', async (req, res) => {
-    const { number, state1, state2} = req.body;
-    
+    const { number, state1, state2, userverified} = req.body;
+    if( userverified != 'true') {
+      return res.status(401).send('User not verified');
+    }
     const deliveries = await Delivery.find({
       start: { $lte: number },
       end: { $gte: number },
@@ -176,7 +178,7 @@ userRouter.post("/api/editprofile", async (req, res) => {
     // Find the user by ID and get their notifications array
     const user = await User.findById(userId);
     const notifications = user.notification || [];
-    console.log(user.notification);
+ 
 
     // Filter out null, undefined, and empty strings from the array of notification IDs
     const notificationIds = notifications.filter(notification => notification && notification.id)
@@ -202,7 +204,7 @@ userRouter.post("/api/editprofile", async (req, res) => {
         { $pull: { notification: { id: notificationId } } },
         { new: true }
       );
-      console.log(user.notification);
+     
      
       res.json(user);
     } catch (e) {

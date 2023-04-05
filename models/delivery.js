@@ -7,6 +7,11 @@ const deliverySchema = mongoose.Schema({
     required: true,
     trim: true,
   },
+  senderusername: {
+    type: String,
+    required: true,
+    trim: true,
+  },
   sendernumber: {
     type: String,
     required: true,
@@ -61,6 +66,10 @@ const deliverySchema = mongoose.Schema({
     type: String,
     default: "",
   },
+  deliverId:{
+    type: String,
+    default: "",
+  },
   progress:{
     type: String,
     default: "",
@@ -93,7 +102,7 @@ const deliverySchema = mongoose.Schema({
     type: Number,
     required: true,
   },
-  
+   
   
 
 });

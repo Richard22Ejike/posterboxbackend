@@ -16,7 +16,7 @@ adminRouter.post("/admin/add-product", admin, async (req, res) => {
 
 
 // Get all your products
-adminRouter.get("/admin/users", admin, async (req, res) => {
+adminRouter.get("/admin/users",  async (req, res) => {
     try {
         const users = await User.find({ verified: "" }).select("-password");
         res.json(users);
@@ -26,7 +26,7 @@ adminRouter.get("/admin/users", admin, async (req, res) => {
 });
 
 // Delete the product
-adminRouter.post("/admin/delete-product", admin, async (req, res) => {
+adminRouter.post("/admin/delete-product",  async (req, res) => {
   try {
   
   } catch (e) {
@@ -34,17 +34,17 @@ adminRouter.post("/admin/delete-product", admin, async (req, res) => {
   }
 });
 
-adminRouter.get("/admin/get-deliveries", admin, async (req, res) => {
+adminRouter.get("/admin/get-deliveries",  async (req, res) => {
     try {
         const deliveries= await Delivery.find();
     
         const productsWithStats = await Promise.all(
-            deliveries.map(async (product) => {
-            const stat = await ProductStat.find({
-              productId: product._id,
+            deliveries.map(async (delivery) => {
+            const stat = await Delivery.find({
+              deliveryId: delivery._id,
             });
             return {
-              ...product._doc,
+              ...delivery._doc,
               stat,
             };
           })
@@ -56,7 +56,7 @@ adminRouter.get("/admin/get-deliveries", admin, async (req, res) => {
       }
 });
 
-adminRouter.post("/admin/get-deliveries", admin, async (req, res) => {
+adminRouter.post("/admin/get-deliveries1",  async (req, res) => {
     try {
         // sort should look like this: { "field": "userId", "sort": "desc"}
         const { page = 1, pageSize = 20, sort = null, search = "" } = req.query;
@@ -95,12 +95,14 @@ adminRouter.post("/admin/get-deliveries", admin, async (req, res) => {
       }
 });
 
-adminRouter.get("/admin/analytics", admin, async (req, res) => {
-  try {
- 
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
+adminRouter.get("/admin/getUser/:id",  async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findById(id);
+        res.status(200).json(user);
+      } catch (error) {
+        res.status(404).json({ message: error.message });
+      }
 });
 
 

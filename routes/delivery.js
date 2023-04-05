@@ -25,9 +25,11 @@ deliveryRouter.post("/api/add-delivery", async (req, res) => {
       state2,
       start,
       end,
-      wallet
+      wallet,
+      userId,
+      senderusername
     } = req.body;
-
+    let user = await User.findById(userId);
     // check if wallet is true or false, and adjust the delivery fee accordingly
     let finalDeliveryFee = deliveryfee;
     if (wallet) {
@@ -59,10 +61,13 @@ deliveryRouter.post("/api/add-delivery", async (req, res) => {
       start,
       end,
       wallet,
+      senderusername,
+      userId,
       orderedAt: new Date().getTime(),
     });
 
     if (wallet) {
+          console.log(user.wallet);
       user.wallet -= finalDeliveryFee; // subtract delivery fee from user's wallet balance if wallet is true
       await user.save();
     }
@@ -97,16 +102,24 @@ deliveryRouter.post("/api/add-delivery", async (req, res) => {
         progress,
         usernumber,
         _id,
-        userId,
+        ongoing,
+        notificationId,
+        deliverId
        } = req.body;
+         const users = await User.findByIdAndUpdate(
+        userId,
+        { $pull: { notification: { id: notificationId } } },
+        { new: true }
+      );
       let delivery = await Delivery.findById(_id);
-    
+      let user = await User.findById(userId);
       if(delivery.username == '' && user.ongoing == ''){
         delivery.username = username;
         delivery.progress = progress;
         delivery.usernumber = usernumber;
-        delivery.userId = userId;
-        await user.save();
+        delivery.deliverId = deliverId;
+        user.ongoing = ongoing;
+        user = await user.save();
         delivery = await delivery.save();
         res.json(delivery);
       }
@@ -142,14 +155,32 @@ deliveryRouter.post("/api/add-delivery", async (req, res) => {
     }
   });
   
-  deliveryRouter.get("/api/products/",  async (req, res) => {
+  deliveryRouter.get("/api/delivery/", async (req, res) => {
     try {
-      const deliverys = await Delivery.find({ username: req.query.username });
-      res.json(deliverys);
+      if (!req.query.searchTerm) {
+        return res.status(400).json({ error: "Missing search term" });
+      }
+  
+     console.log(req.query.searchTerm);
+      
+      const deliveries = await Delivery.find({
+        $or: [
+          { userId: req.query.searchTerm },
+          { deliverId: req.query.searchTerm },
+         
+        ]
+      }).lean().limit(100);
+       
+   
+  
+      console.log(deliveries);
+      return res.json(deliveries);
     } catch (e) {
-      res.status(500).json({ error: e.message });
+      console.log(e.message);
+      return res.status(500).json({ error: e.message });
     }
   });
+  
   deliveryRouter.get("/api/delivery/search/:id",  async (req, res) => {
     try {
       const delivery = await Delivery.find({

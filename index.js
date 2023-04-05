@@ -1,4 +1,9 @@
 const express = require ('express');
+var bodyParser = require('body-parser');
+var cors = require('cors');
+var helmet = require('helmet');
+
+
 const mongoose = require("mongoose");
 require('dotenv').config();
 const otpGenerator = require("otp-generator");
@@ -12,7 +17,13 @@ const app = express();
 // IMPORTS FROM OTHER FILES
 const authRouter = require("./routes/auth");
 const userRouter = require("./routes/user");
+const adminRouter = require("./routes/admin");
 // middleware
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cors());
+app.use(helmet());
+app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(express.json());
 app.use(authRouter);
 app.use(deliveryRouter);
