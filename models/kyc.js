@@ -26,11 +26,21 @@ const kycSchema = mongoose.Schema({
         default: "",
         trim: true,
     },
+    userId:{
+        type: String,
+        default: "",
+      },
     image: {
       type: String,
       default: "",
       trim: true,
   },
+  profilepic: {
+    type: String,
+    default: "",
+    trim: true,
+},
+    
       
 
 });

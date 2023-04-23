@@ -1,6 +1,7 @@
 const User = require("../models/user");
 const Kyc = require("../models/kyc");
 const Withdraw = require("../models/withdraw");
+const Transaction = require("../models/transaction");
 const express = require("express");
 const userRouter = express.Router();
 const {Notifications} = require("../models/notification");
@@ -48,23 +49,44 @@ userRouter.post("/api/editprofile", async (req, res) => {
         image,
         name,
         dateofbirth,
+        profilepic,
         residence,
         type,
         number,
       userId } = req.body;
       let user = await User.findById(userId);
-      let kyc = new Kyc ({
-        image,
-        name,
-        dateofbirth,
-        residence,
-        type,
-        number
-      });
-      user.kyc = kyc._id;
-      await user.save();
-      kyc = await kyc.save();
-      res.json(kyc);
+      
+      if (user.verified != 'true') {
+        user.kyc = [];
+        // Create a new Kyc document
+        let kyc = new Kyc({
+          image,
+          name,
+          dateofbirth,
+          profilepic,
+          residence,
+          userId,
+          type,
+          number
+        });
+  
+        // Set the kyc field of the user document to the ID of the new Kyc document
+        user.kyc = kyc;
+  
+        // Save the updated user document
+        await user.save();
+  
+        // Save the new Kyc document
+        kyc = await kyc.save();
+  
+
+  
+        // Return the saved Kyc document as JSON
+        res.json(kyc);
+      } else {
+        // If user.verified is true, return an error message
+        res.status(400).json({ error: 'User already verified.' });
+      }
     } catch (e) {
       res.status(500).json({ error: e.message });
     }
@@ -83,16 +105,24 @@ userRouter.post("/api/editprofile", async (req, res) => {
   });
   userRouter.post("/api/ongoing",  async (req, res) => {
     try {
-      const { 
-        ongoing,userId } = req.body;
-      let user = await User.findById(userId);
-      user.ongoing = ongoing;
-      user = await user.save();
-      res.json(user);
+        const { ongoing, userId } = req.body; 
+        let user = await User.findById(userId);
+        user.ongoing = ongoing;
+        user = await user.save();
+
+        const delivery = await Delivery.findOne({ _id: ongoing }); // find the delivery by id
+        if (!delivery) {
+            throw new Error('Delivery not found.');
+        }
+
+        user.wallet += delivery.deliveryfee; // add delivery fee to user wallet
+        user = await user.save(); // save updated wallet amount
+        
+        res.json(user);
     } catch (e) {
-      res.status(500).json({ error: e.message });
+        res.status(500).json({ error: e.message });
     }
-  });
+});
   userRouter.post("/api/add-user-notifications",  async (req, res) => {
     try {
       const { topic,  message,   } = req.body;
@@ -297,15 +327,25 @@ userRouter.post("/api/withdraw",  async (req, res) => {
     if (user.wallet < amount) {
       return res.status(400).json({ message: "Insufficient funds" });
     }
-    user.wallet -= amount;
 
+    user.wallet -= amount;
     let withdraw = new Withdraw({
-      userId,
+      name,
+      amount, // update with adjusted delivery fee
       account,
-      amount,
-      name 
+      userId,
+      username:user.username,
+    });
+
+    let transaction = new Transaction({
+      username:user.username,
+      cost: amount, // update with adjusted delivery fee
+      type:'debit',
+      userId,
+      createdAt: new Date().getTime(),
     });
     withdraw = await withdraw.save();
+    transaction = await transaction.save();
     user = await user.save(); 
 
 
@@ -315,6 +355,8 @@ userRouter.post("/api/withdraw",  async (req, res) => {
   }
 });
 
+
+
 userRouter.post("/api/add-fund",  async (req, res) => {
   try {
     const { 
@@ -323,6 +365,14 @@ userRouter.post("/api/add-fund",  async (req, res) => {
     } = req.body;
      let user = await User.findById(userId);
     user.wallet += amount;
+    let transaction = new Transaction({
+      username:user.username,
+      cost: amount, // update with adjusted delivery fee
+      type:'credit',
+      userId,
+      createdAt: new Date().getTime(),
+    });
+    transaction = await transaction.save(); 
     user = await user.save(); 
     res.json(user);
   } catch (e) {

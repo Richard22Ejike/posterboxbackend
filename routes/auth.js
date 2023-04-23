@@ -193,7 +193,11 @@ authRouter.post("/api/signup", async (req, res) => {
 });
 authRouter.post("/admin/signup", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, code } = req.body;
+
+    if (code !== "posterbox1969") {
+      return res.status(400).json({ msg: "Invalid code!" });
+    }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -208,7 +212,7 @@ authRouter.post("/admin/signup", async (req, res) => {
       email,
       password: hashedPassword,
       name,
-      type:'admin',
+      type: 'admin',
     });
     user = await user.save();
     res.json(user);
@@ -216,4 +220,34 @@ authRouter.post("/admin/signup", async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
+authRouter.post("/admin/signin", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res
+        .status(400)
+        .json({ msg: "User with this email does not exist!" });
+    }
+
+    // Check if user is an admin
+    if (user.type !== 'admin') {
+      return res.status(400).json({ msg: "Only admins can sign in through this endpoint." });
+    }
+
+    const isMatch = await bcryptjs.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ msg: "Incorrect password." });
+    }
+
+    const token = jwt.sign({ id: user._id }, "passwordKey");
+    res.json({ token, ...user._doc });
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 module.exports = authRouter;

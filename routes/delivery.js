@@ -3,7 +3,7 @@ const deliveryRouter = express.Router();
 const auth = require("../middlewares/auth");
 const User = require("../models/user");
 const { Delivery } = require("../models/delivery");
-
+const  Transaction  = require("../models/transaction");
 deliveryRouter.post("/api/add-delivery", async (req, res) => {
   try {
     const { 
@@ -40,7 +40,13 @@ deliveryRouter.post("/api/add-delivery", async (req, res) => {
     if (wallet && user.wallet < finalDeliveryFee) {
       return res.status(400).json({ msg: "Insufficient Balance" });
     }
-
+    let transaction = new Transaction({
+      username, 
+      cost: finalDeliveryFee, // update with adjusted delivery fee
+      type:'Debits',
+      userId,
+      createdAt: new Date().getTime(),
+    });
     let delivery = new Delivery({
       username, 
       deliveryfee: finalDeliveryFee, // update with adjusted delivery fee
@@ -73,6 +79,7 @@ deliveryRouter.post("/api/add-delivery", async (req, res) => {
     }
 
     delivery = await delivery.save();
+    transaction = await transaction.save();
     res.json(delivery);
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -107,13 +114,13 @@ deliveryRouter.post("/api/add-delivery", async (req, res) => {
         deliverId
        } = req.body;
          const users = await User.findByIdAndUpdate(
-        userId,
+          deliverId,
         { $pull: { notification: { id: notificationId } } },
         { new: true }
       );
       let delivery = await Delivery.findById(_id);
-      let user = await User.findById(userId);
-      if(delivery.username == '' && user.ongoing == ''){
+      let user = await User.findById( deliverId);
+      if(delivery.username == '' && user.ongoing == '' && delivery.userId != deliverId){
         delivery.username = username;
         delivery.progress = progress;
         delivery.usernumber = usernumber;
@@ -161,7 +168,7 @@ deliveryRouter.post("/api/add-delivery", async (req, res) => {
         return res.status(400).json({ error: "Missing search term" });
       }
   
-     console.log(req.query.searchTerm);
+     
       
       const deliveries = await Delivery.find({
         $or: [

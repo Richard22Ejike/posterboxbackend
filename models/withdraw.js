@@ -24,6 +24,18 @@ const withdrawSchema = mongoose.Schema({
         trim: true,
     },
 
+    paid: {
+        type: String,
+        default: "false",
+        trim: true,
+    },
+
+    username:{
+        type: String,
+        default: "Name",
+        trim: true,
+    }
+
 
 });
 
