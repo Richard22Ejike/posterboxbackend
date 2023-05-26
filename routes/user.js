@@ -322,7 +322,7 @@ userRouter.post("/api/withdraw",  async (req, res) => {
      userId,
      account,
      amount,
-     name } = req.body;
+     name,username } = req.body;
      let user = await User.findById(userId);
     if (user.wallet < amount) {
       return res.status(400).json({ message: "Insufficient funds" });
@@ -334,11 +334,11 @@ userRouter.post("/api/withdraw",  async (req, res) => {
       amount, // update with adjusted delivery fee
       account,
       userId,
-      username:user.username,
+      username:username,
     });
 
     let transaction = new Transaction({
-      username:user.username,
+      username:username,
       cost: amount, // update with adjusted delivery fee
       type:'debit',
       userId,
@@ -362,11 +362,14 @@ userRouter.post("/api/add-fund",  async (req, res) => {
     const { 
      userId,
      amount,
+     name,
     } = req.body;
      let user = await User.findById(userId);
+   
+  
     user.wallet += amount;
     let transaction = new Transaction({
-      username:user.username,
+      username:name,
       cost: amount, // update with adjusted delivery fee
       type:'credit',
       userId,

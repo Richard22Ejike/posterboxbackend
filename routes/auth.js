@@ -194,7 +194,7 @@ authRouter.post("/api/signup", async (req, res) => {
 authRouter.post("/admin/signup", async (req, res) => {
   try {
     const { name, email, password, code } = req.body;
-
+ console.log(email);
     if (code !== "posterbox1969") {
       return res.status(400).json({ msg: "Invalid code!" });
     }
@@ -213,6 +213,7 @@ authRouter.post("/admin/signup", async (req, res) => {
       password: hashedPassword,
       name,
       type: 'admin',
+      orderedAt: new Date().getTime(),
     });
     user = await user.save();
     res.json(user);

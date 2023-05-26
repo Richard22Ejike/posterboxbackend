@@ -4,7 +4,7 @@ const User = require("../models/user");
 const Kyc = require("../models/kyc");
 const admin = require("../middlewares/admin");
 const { Delivery } = require("../models/delivery");
-const { Transaction } = require("../models/transaction");
+const  Transaction  = require("../models/transaction");
 const Withdraw = require("../models/withdraw");
 // Add product
 adminRouter.post("/admin/add-product", admin, async (req, res) => {
@@ -182,7 +182,7 @@ adminRouter.post('/admin/reset-kyc', async (req, res) => {
 
 adminRouter.get("/admin/allTransaction", async (req, res) => {
   try {
-    const transactions = await Transaction.find({ });
+    const transactions = await Transaction.find({});
     transactions.reverse();
     res.status(200).json(transactions);
   } catch (error) {
@@ -214,17 +214,17 @@ adminRouter.get("/admin/allWithdraw", async (req, res) => {
 
 adminRouter.post('/admin/paid', async (req, res) => {
   try {
-    const { id} = req.body;
+    const {id} = req.body;
     const withdraw = await Withdraw.findById(id);
 
     if (!withdraw) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    withdraw.verified = 'true';
+    withdraw.paid = 'true';
     await withdraw.save();
 
-    res.status(200).json({ message: 'User verified successfully and KYC documents deleted' });
+    res.status(200).json({ message: 'User withdraw successfully ' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
