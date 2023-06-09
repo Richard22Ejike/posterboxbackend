@@ -20,7 +20,9 @@
     "http": "^0.0.1-security",
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^6.9.0",
+    "node-uuid": "^1.4.8",
     "otp-generator": "^4.0.0",
+    "paystack": "^2.0.1",
     "twilio": "^3.84.1"
   }
 }
