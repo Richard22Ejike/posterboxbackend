@@ -114,11 +114,12 @@ var otpMessage = `Dear Customer, ${otp} is the One Time Password ( OTP ) for you
 // Send SMS message containing OTP to destination number using Twilio
 client.messages
   .create({ body: otpMessage, from: "+17622488287", to: `+234${phone}` })
-  .then(message => console.log(message.sid));
+  .then(message => console.log(message.sid)).done();
 
 // Send the new OTP back in the response
 console.log(otp);
 res.send({ otp });
+ 
 
   } catch (e) {
     res.status(500).json({ error: e.message });
